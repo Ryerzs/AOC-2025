@@ -36,11 +36,13 @@ def day_():
 
     time1 = time.perf_counter()
 
-    ans1 = star1(data)
+    # ans1 = star1(data)
+    ans1 = star1_alt3(data)
     time2 = time.perf_counter()
 
     # ans2 = star2(data)
-    ans2 = star2_alternative(data)
+    #ans2 = star2_alt2(data)
+    ans2 = star2_alt3(data)
     time3 = time.perf_counter()
 
     load_time = time1 - start_time
@@ -61,21 +63,43 @@ def day_():
         print(f'Star 2 answer: {ans2}')
 
 def format_data(raw):
-    ids = []
-    for row in raw.splitlines():
-        for r in row.split(','):
-            start, end = int(r.split('-')[0]), int(r.split('-')[1])+1
-            for cur_id in range(start, end):
-                ids.append(str(cur_id))
-    print(max(len(x) for x in ids)) # Max length is 10
-    return ids
+    return [(int(r.split('-')[0]), int(r.split('-')[1])) for r in raw.splitlines()[0].split(',')]
     
-def star1(data: list[str]) -> int:
+def star1(data: list[(int,int)]) -> int:
     count:int = 0
-    for cur_id in data:
-        if len(cur_id)%2 == 1: # We only consider even id's to have repeats
-            continue
-        count += 0 if valid_id(cur_id) else int(cur_id)
+    for start,end in data:
+        for cur_id in range(start, end+1):
+            str_id = str(cur_id)
+            if len(str_id)%2 == 1: # We only consider even id's to have repeats
+                continue
+            count += 0 if valid_id(str_id) else cur_id
+    return count
+
+def star1_alt3(data: list[(int,int)]) -> int:
+    # --------------- Simpler possible_repeating_divisors() ---------------
+    repeating_divisors:dict[int:list[int]] =  {}
+    repeating_divisors:dict[int:list[int]] =  {}
+    for i in range(1,11): # Biggest number is 10 digits
+        repeating_divisors[i] = [] # Need to create for 1, some ints are length 1
+    repeating_divisors[2].append(int('1'*2))
+    repeating_divisors[4].append(int('01'*2))
+    repeating_divisors[6].append(int('001'*2))
+    repeating_divisors[8].append(int('0001'*2))
+    repeating_divisors[10].append(int('00001'*2))
+
+    #----------------------------------------------------------------------
+    # --------------------- Simpler all_invalid_ids() ---------------------
+    invalid_ids = set()
+    for length, divisors in repeating_divisors.items():
+        for divisor in divisors:
+            exponent = length-len(str(divisor))
+            for i in range(10**(exponent), 10**(exponent+1)):
+                invalid_ids.add(i*divisor)
+    #----------------------------------------------------------------------
+
+    count:int = 0
+    for start,end in data:
+        count += sum([cur_id for cur_id in invalid_ids if cur_id >= start and cur_id <= end])
     return count
 
 def valid_id(cur_id:str, splits: list[int] = [2]) -> bool:
@@ -96,21 +120,32 @@ def valid_id(cur_id:str, splits: list[int] = [2]) -> bool:
 def find_divisiors(n: int) -> list[int]:
     return [i for i in range(2, n+1) if n%i == 0]
 
-def star2(data: list[str]) -> str:
+def star2(data: list[(int, int)]) -> str:
     count:int = 0
-    for cur_id in tqdm(data):
-        divisors = find_divisiors(len(cur_id))
-        count += 0 if valid_id(cur_id, divisors) else int(cur_id)
+    for start,end in data:
+        for cur_id in range(start, end+1):
+            str_id = str(cur_id)
+            divisors = find_divisiors(len(str_id))
+            count += 0 if valid_id(str_id, divisors) else cur_id
     return count
 
-def star2_alternative(data: list[str]) -> str:
+def star2_alt2(data: list[(int,int)]) -> str:
     count:int = 0
     possible_divisors = possible_repeating_divisors()
-    for cur_id in tqdm(data):
-        for divisor in possible_divisors[len(cur_id)]:
-            if int(cur_id)%divisor == 0:
-                count += int(cur_id)
-                break
+    for start,end in tqdm(data):
+        for cur_id in range(start, end+1):
+            str_id = str(cur_id)
+            for divisor in possible_divisors[len(str_id)]:
+                if cur_id%divisor == 0:
+                    count += cur_id
+                    break
+    return count
+
+def star2_alt3(data: list[(int,int)]) -> str:
+    count:int = 0
+    invalid_ids = all_invalid_ids()
+    for start,end in data:
+        count += sum([cur_id for cur_id in invalid_ids if cur_id >= start and cur_id <= end])
     return count
 
 
@@ -130,11 +165,23 @@ def possible_repeating_divisors() -> dict[int:list[int]]:
             possible_divisors[i].append(int('00001'*(i//5)))
     return possible_divisors
 
+def all_invalid_ids() -> set[int]:
+    invalid_ids = set()
+    repeating_divisors: dict[int:list[int]] = possible_repeating_divisors()
+    for length, divisors in repeating_divisors.items():
+        for divisor in divisors:
+            exponent = length-len(str(divisor))
+            for i in range(10**(exponent), 10**(exponent+1)):
+                invalid_ids.add(i*divisor)
+    return invalid_ids
+
 def main():
     import cProfile
     import pstats
     with cProfile.Profile() as pr:
         day_()
+    
+
     
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
