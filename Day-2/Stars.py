@@ -107,11 +107,10 @@ def star2_alternative(data: list[str]) -> str:
     count:int = 0
     possible_divisors = possible_repeating_divisors()
     for cur_id in tqdm(data):
-        valid = True
         for divisor in possible_divisors[len(cur_id)]:
             if int(cur_id)%divisor == 0:
-                valid = False
-        count += 0 if valid else int(cur_id)
+                count += int(cur_id)
+                break
     return count
 
 
