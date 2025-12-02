@@ -1,6 +1,2 @@
-
-*.txt
-*.txt
-*.prof
-Day-1/data.txt
-Day-1/test-data.txt
+# Created by venv; see https://docs.python.org/3/library/venv.html
+*

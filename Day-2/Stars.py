@@ -1,4 +1,4 @@
-import os
+import os, platform
 import sys
 import time
 from aocd import submit
@@ -9,8 +9,12 @@ from collections import Counter, deque
 from tqdm import tqdm
 
 def day_():
-    year = int(os.getcwd().split('\\')[-2][-4:]) 
-    day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
+    if platform.system() == "Linux":
+        year = int(os.getcwd().split('/')[-2][-4:]) 
+        day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
+    else:
+        year = int(os.getcwd().split('\\')[-2][-4:]) 
+        day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     puzzle = Puzzle(year=year, day=day) 
     submit_a = "a" in sys.argv
     submit_b = "b" in sys.argv
@@ -65,21 +69,25 @@ def star1(data: list[(int,int)]) -> int:
     count:int = 0
     for start, end in data:
         for i in range(start,end+1):
+            if len(str(i))%2 == 1:
+                continue
             count += i if not valid_id(i) else 0
     return count
 
 def valid_id(cur_id:int, splits = 2) -> bool:
     s = str(cur_id)
-    length = len(str(cur_id))
-    
-    parts = set(s[i*(length//splits):(i+1)*(length//splits)] for i in range(splits))
+    length = len(s)
+    split_size = length//splits
+    if length < 2:
+        return True
+    parts = set(s[i*split_size:(i+1)*split_size] for i in range(splits))
     if len(parts) == 1:
         return False
     return True
 
 def divisiors(n: int) -> list[int]:
     options: list[int] = []
-    for i in range(2,(n+2)//2):
+    for i in range(2,n+1):
         if n%i == 0:
             options.append(i)
     return options
@@ -89,8 +97,11 @@ def star2(data):
     for start, end in tqdm(data):
         for i in range(start,end+1):
             factors = divisiors(len(str(i)))
+            isValid = True
             for factor in factors:
-                count += i if not valid_id(i, factor) else 0
+                if not valid_id(i, factor):
+                    count += i
+                    break
     return count
 
 def main():
@@ -102,7 +113,10 @@ def main():
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     # stats.print_stats()
-    day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
+    if platform.system() == "Linux":
+        day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
+    else:
+        day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     stats.dump_stats(filename = f'profiling{day}.prof')
 
 # run with `py day_n.py -- a b` to submit both stars for day n

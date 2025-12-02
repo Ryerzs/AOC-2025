@@ -1,4 +1,4 @@
-import os
+import os, platform
 import sys
 import time
 from aocd import submit
@@ -8,8 +8,13 @@ import functools
 from collections import Counter, deque
 
 def day_():
-    year = int(os.getcwd().split('\\')[-2][-4:]) 
-    day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
+    print(platform.system)
+    if platform.system() == "Linux":
+        year = int(os.getcwd().split('/')[-2][-4:]) 
+        day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
+    else:
+        year = int(os.getcwd().split('\\')[-2][-4:]) 
+        day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     puzzle = Puzzle(year=year, day=day) 
     submit_a = "a" in sys.argv
     submit_b = "b" in sys.argv
