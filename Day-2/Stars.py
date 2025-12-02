@@ -39,7 +39,8 @@ def day_():
     ans1 = star1(data)
     time2 = time.perf_counter()
 
-    ans2 = star2(data)
+    # ans2 = star2(data)
+    ans2 = star2_alternative(data)
     time3 = time.perf_counter()
 
     load_time = time1 - start_time
@@ -66,6 +67,7 @@ def format_data(raw):
             start, end = int(r.split('-')[0]), int(r.split('-')[1])+1
             for cur_id in range(start, end):
                 ids.append(str(cur_id))
+    print(max(len(x) for x in ids)) # Max length is 10
     return ids
     
 def star1(data: list[str]) -> int:
@@ -100,6 +102,34 @@ def star2(data: list[str]) -> str:
         divisors = find_divisiors(len(cur_id))
         count += 0 if valid_id(cur_id, divisors) else int(cur_id)
     return count
+
+def star2_alternative(data: list[str]) -> str:
+    count:int = 0
+    possible_divisors = possible_repeating_divisors()
+    for cur_id in tqdm(data):
+        valid = True
+        for divisor in possible_divisors[len(cur_id)]:
+            if int(cur_id)%divisor == 0:
+                valid = False
+        count += 0 if valid else int(cur_id)
+    return count
+
+
+def possible_repeating_divisors() -> dict[int:list[int]]:
+    possible_divisors:dict[int:list[int]] =  {}
+    for i in range(1,11): # Biggest number is 10 digits
+        possible_divisors[i] = [] # Need to create for 1, some ints are length 1
+    for i in range(2,11): # Biggest number is 10 digits
+        possible_divisors[i].append(int('1'*i))
+        if i > 2 and i%2 == 0:
+            possible_divisors[i].append(int('01'*(i//2)))
+        if i > 3 and i%3 == 0:
+            possible_divisors[i].append(int('001'*(i//3)))
+        if i > 4 and i%4 == 0:
+            possible_divisors[i].append(int('0001'*(i//3)))
+        if i > 5 and i%5 == 0:
+            possible_divisors[i].append(int('00001'*(i//5)))
+    return possible_divisors
 
 def main():
     import cProfile
