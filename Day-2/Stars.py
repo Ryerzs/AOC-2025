@@ -60,48 +60,45 @@ def day_():
         print(f'Star 2 answer: {ans2}')
 
 def format_data(raw):
-    data = []
+    ids = []
     for row in raw.splitlines():
-        data = [(int(r.split('-')[0]), int(r.split('-')[1])) for r in row.split(',')]
-    return data
+        for r in row.split(','):
+            start, end = int(r.split('-')[0]), int(r.split('-')[1])+1
+            for cur_id in range(start, end):
+                ids.append(str(cur_id))
+    return ids
     
-def star1(data: list[(int,int)]) -> int:
+def star1(data: list[str]) -> int:
     count:int = 0
-    for start, end in data:
-        for i in range(start,end+1):
-            if len(str(i))%2 == 1:
-                continue
-            count += i if not valid_id(i) else 0
+    for cur_id in data:
+        if len(cur_id)%2 == 1: # We only consider even id's to have repeats
+            continue
+        count += 0 if valid_id(cur_id) else int(cur_id)
     return count
 
-def valid_id(cur_id:int, splits = 2) -> bool:
-    s = str(cur_id)
-    length = len(s)
-    split_size = length//splits
-    if length < 2:
+def valid_id(cur_id:str, splits: list[int] = [2]) -> bool:
+    """
+    Takes an id and checks for repeats in all splitting sizes in 'spltis'
+    This function assumes that cur_id can be split evenly into all splitting sizes in 'splits'
+    """
+    length:int = len(cur_id)
+    if length < 2: # Can't have duplicates, so it's valid
         return True
-    parts = set(s[i*split_size:(i+1)*split_size] for i in range(splits))
-    if len(parts) == 1:
-        return False
-    return True
+    for split in splits:
+        split_size:int = length//split
+        parts = set(cur_id[i*split_size:(i+1)*split_size] for i in range(split)) # Spltis string into split sized pieces
+        if len(parts) == 1:
+            return False
+    return True # If it now splitting creates repeats then it is valid
 
-def divisiors(n: int) -> list[int]:
-    options: list[int] = []
-    for i in range(2,n+1):
-        if n%i == 0:
-            options.append(i)
-    return options
+def find_divisiors(n: int) -> list[int]:
+    return [i for i in range(2, n+1) if n%i == 0]
 
-def star2(data):
+def star2(data: list[str]) -> str:
     count:int = 0
-    for start, end in tqdm(data):
-        for i in range(start,end+1):
-            factors = divisiors(len(str(i)))
-            isValid = True
-            for factor in factors:
-                if not valid_id(i, factor):
-                    count += i
-                    break
+    for cur_id in tqdm(data):
+        divisors = find_divisiors(len(cur_id))
+        count += 0 if valid_id(cur_id, divisors) else int(cur_id)
     return count
 
 def main():
@@ -112,13 +109,11 @@ def main():
     
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
-    # stats.print_stats()
     if platform.system() == "Linux":
         day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
     else:
         day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     stats.dump_stats(filename = f'profiling{day}.prof')
 
-# run with `py day_n.py -- a b` to submit both stars for day n
 if __name__ == '__main__':
     main()
