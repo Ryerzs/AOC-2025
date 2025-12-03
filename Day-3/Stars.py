@@ -64,30 +64,27 @@ def format_data(raw):
         data.append([int(n) for n in row])
     return data
     
+
+def find_biggest_number_string(bank:list[int], str_length:int):
+    digits = []
+    index = 0
+    l = len(bank)
+    for i in range(str_length):
+        max_digit = max(bank[index:l-(str_length-i-1)])
+        index += bank[index:l-(str_length-i-1)].index(max_digit)+1
+        digits.append(max_digit)
+    return int(''.join([str(n) for n in digits]))
+
 def star1(data):
     total = 0
     for bank in data:
-        digits = []
-        index = 0
-        l = len(bank)
-        for i in range(2):
-            max_digit = max(bank[index:l-(1-i)])
-            index += bank[index:l-(1-i)].index(max_digit)+1
-            digits.append(max_digit)
-        total += int(''.join([str(n) for n in digits]))
+        total += find_biggest_number_string(bank, 2)
     return total
 
 def star2(data):
     total = 0
     for bank in data:
-        digits = []
-        index = 0
-        l = len(bank)
-        for i in range(12):
-            max_digit = max(bank[index:l-(11-i)])
-            index += bank[index:l-(11-i)].index(max_digit)+1
-            digits.append(max_digit)
-        total += int(''.join([str(n) for n in digits]))
+        total += find_biggest_number_string(bank, 12)
     return total
 
 def main():
