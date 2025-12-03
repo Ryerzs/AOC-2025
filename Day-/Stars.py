@@ -1,4 +1,4 @@
-import os
+import os, platform
 import sys
 import time
 from aocd import submit
@@ -8,8 +8,12 @@ import functools
 from collections import Counter, deque
 
 def day_():
-    year = int(os.getcwd().split('\\')[-2][-4:]) 
-    day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
+    if platform.system() == "Linux":
+        year = int(os.getcwd().split('/')[-2][-4:]) 
+        day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
+    else:
+        year = int(os.getcwd().split('\\')[-2][-4:]) 
+        day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     puzzle = Puzzle(year=year, day=day) 
     submit_a = "a" in sys.argv
     submit_b = "b" in sys.argv
@@ -75,7 +79,10 @@ def main():
     stats = pstats.Stats(pr)
     stats.sort_stats(pstats.SortKey.TIME)
     # stats.print_stats()
-    day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
+    if platform.system() == "Linux":
+        day = int(__file__.split('/')[-2].split('-')[1].split('.')[0])
+    else:
+        day = int(__file__.split('\\')[-2].split('-')[1].split('.')[0])
     stats.dump_stats(filename = f'profiling{day}.prof')
 
 # run with `py day_n.py -- a b` to submit both stars for day n
