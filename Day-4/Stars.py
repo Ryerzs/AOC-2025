@@ -106,7 +106,7 @@ def star2(data):
         checked.add(pos)
         for (i,j) in offsets:
             neighbour = (pos[0]+i, pos[1]+j)
-            if neighbour not in data:
+            if neighbour not in data or neighbour in checked:
                 continue
 
             neighbour_map[neighbour] -= 1
