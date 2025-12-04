@@ -62,45 +62,56 @@ def format_data(raw) -> dict[(int,int):str]:
     data = {}
     for y, row in enumerate(raw.splitlines()):
         for x, char in enumerate(row):
-            if char == '@':
-                data[(x,y)] = char
+            if char == '.':
+                continue
+            data[(x,y)] = char
     return data
     
 def star1(data):
     neighbour_map = get_total_neighbours(data)
     return sum([1 for nr_neighbour in neighbour_map.values() if nr_neighbour < 4])
 
+def get_offsets() -> list[(int,int)]:
+    offsets = []
+    for i in range(-1,2):
+        for j in range(-1,2):
+            if (i,j) == (0,0):
+                continue
+            offsets.append((i,j))
+    return offsets
+
 def get_total_neighbours(data) -> dict[(int,int),int]:
     neighbour_map = {}
+    offsets = get_offsets()
     for (x,y) in data.keys():
         total = 0
-        for i in range(-1,2):
-            for j in range(-1,2):
-                if (x+i,y+j) in data.keys() and (i,j) != (0,0):
-                    total += 1
+        for (i,j) in offsets:
+            if (x+i,y+j) not in data.keys():
+                continue
+            total += 1
         neighbour_map[(x,y)] = total
     return neighbour_map
 
 def star2(data):
-    possible_options = []
-    for i in range(-1,2):
-        for j in range(-1,2):
-            if (i,j) != (0,0):
-                possible_options.append((i,j))
+    offsets = get_offsets()
     neighbour_map = get_total_neighbours(data)
     checked = set()
     to_check = deque([(x,y) for (x,y), nr_neighbour in neighbour_map.items() if nr_neighbour < 4])
+
     while len(to_check) > 0:
-        (x,y) = to_check.popleft()
-        if (x,y) in checked:
+        pos = to_check.popleft()
+        if pos in checked:
             continue
-        checked.add((x,y))
-        for (i,j) in possible_options:
-            neighbour = (x+i, y+j)
-            if neighbour in data:
-                neighbour_map[neighbour] -= 1
-                if neighbour_map [neighbour] < 4:
-                    to_check.append(neighbour)
+
+        checked.add(pos)
+        for (i,j) in offsets:
+            neighbour = (pos[0]+i, pos[1]+j)
+            if neighbour not in data:
+                continue
+
+            neighbour_map[neighbour] -= 1
+            if neighbour_map [neighbour] < 4:
+                to_check.append(neighbour)
     return len(checked)
 
 def main():
