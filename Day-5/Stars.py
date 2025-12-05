@@ -91,30 +91,24 @@ def star2(data):
     return valid_foods
 
 def simplify_ranges(ranges):
-    new_ranges = [ranges[0]]
+    new_ranges = deque([ranges[0]])
     for (a,b) in ranges[1:]:
-        temp = []
-        for (c,d) in new_ranges:
+        temp = deque([])
+        while len(new_ranges) > 0:
+            (c,d) = new_ranges.pop()
             if a <= c and c <= b and b <= d: # a c b d
-                temp.append((a, d))
-                break
+                a,b = a, d
             elif a <= c and c <= b and d <= b: # a c d b
-                temp.append((a, b))
-                break
+                pass
             elif c <= a and a <= d and d <= b: # c a d b
-                temp.append((c, b))
-                break
+                a,b = c, b
             elif c <= a and a <= d and b <= d: # c a b d
-                temp.append((c, d))
-                break
-            else: # No intersection, add both ranges
-                if (c,d) not in temp:
-                    temp.append((c,d))
-                if (a,b) not in temp:
-                    temp.append((a,b))
+                a,b = c, d
+            else: # No intersection, add back range
+                temp.append((c,d))
+        temp.append((a,b))
         new_ranges = temp
-        print(new_ranges)
-    return new_ranges
+    return list(new_ranges)
 
 
 
