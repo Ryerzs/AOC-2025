@@ -97,18 +97,22 @@ def simplify_ranges(ranges):
         for (c,d) in new_ranges:
             if a <= c and c <= b and b <= d: # a c b d
                 temp.append((a, d))
+                break
             elif a <= c and c <= b and d <= b: # a c d b
                 temp.append((a, b))
+                break
             elif c <= a and a <= d and d <= b: # c a d b
                 temp.append((c, b))
+                break
             elif c <= a and a <= d and b <= d: # c a b d
                 temp.append((c, d))
+                break
             else: # No intersection, add both ranges
                 if (c,d) not in temp:
                     temp.append((c,d))
                 if (a,b) not in temp:
                     temp.append((a,b))
-            new_ranges = temp
+        new_ranges = temp
         print(new_ranges)
     return new_ranges
 
