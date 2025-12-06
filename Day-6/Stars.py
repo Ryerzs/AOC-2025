@@ -38,7 +38,7 @@ def day_():
     ans1 = star1(data)
     time2 = time.perf_counter()
 
-    ans2 = star2(data)
+    ans2 = star2(raw_data)
     time3 = time.perf_counter()
 
     load_time = time1 - start_time
@@ -87,16 +87,45 @@ def star1(data):
         total += count
     return total
 
-def star2(data):
+def star2(raw):
+    height = len(raw.splitlines())
+    width = max([len(raw.splitlines()[i]) for i in range(height)])
+    new_column = False
     total = 0
+    numbers = []
+    for i in range(width):
+        number = []
+        if new_column:
+            new_column = False
+            continue
+        for j, row in enumerate(raw.splitlines()):
+            if len(row) <= width-1-i:
+                if j != height-1:
+                    number.append('0')
+                continue
+            char = row[width-1-i]
+            if char == '+'  or char == '*': #Last row
+                new_column = True
+                continue
+            if char == '' and j != height-1:
+                number.append('0')
+            else:
+                number.append(char)
+        numbers.append(int(''.join(number)))
+        if new_column == False:
+            continue
+        if char == '+':
+            operator = (lambda x,y:x+y)
+            count = 0
+        if char == '*':
+            operator = (lambda x,y:x*y)
+            count = 1
+        print(numbers)
+        for number in numbers:
+            count = operator(count, number)
+        total += count
+        numbers = []
     return total
-
-def rearrange_numbers(numbers:list[int]) -> list[int]:
-    max_length = len(str(max(numbers)))
-    new_numbers = defaultdict(list)
-    for number in numbers:
-        splitstr(number)
-
 
 def main():
     import cProfile
