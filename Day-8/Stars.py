@@ -148,66 +148,52 @@ def star2(data):
         distance, (pos1, pos2) = heappop(to_connect)
         if (pos1, pos2) in searched or (pos2, pos1) in searched:
             continue
-        last_added = (pos1, pos2)
-        add_to_network_recurse(network, pos1,pos2)
-        # if connections == 12:
-        #     print_network(network)
         searched.add(tuple((pos1,pos2)))
         searched.add(tuple((pos2,pos1)))
-        connections += 1
-        if len(network[pos1]) == len(data)-1:
-            # print(connections)
+
+        last_added = (pos1, pos2)
+        network[pos1].add(pos2)
+        network[pos2].add(pos1)
+        # if pos1 in network:
+        #     network[pos1].add(pos2)
+        # else:
+        #     network[pos2].add(pos1)
+        if connections == 12:
             print_network(network)
+        connections += 1
+        if biggest_ring(network, data) == len(data):
+            # print(connections)
+            # print_network(network)
             break
-        print(i*100/length)
+        print(i*100/length, biggest_ring(network, data))
         i += 1
     
     print(last_added)
     return last_added[0][0]*last_added[1][0]
 
+def biggest_ring(network, data):
+    checked = set()
+    sizes = []
+    for pos in data:
+        count = 0
+        to_search = deque([pos])
+        while len(to_search) > 0:
+            current = to_search.pop()
+            if current in checked:
+                continue
+            checked.add(current)
+            count += 1
+            for connection in network[current]:
+                to_search.append(connection)
+        sizes.append(count)
+    # print(max(sizes), sizes)
+    return max(sizes)
+
 def add_to_network_recurse(network, pos1, pos2) -> None:
-    added = set()
-    connection = (pos1,pos2)
-    to_add = deque()
-    to_add.append(connection)
-    # print(to_add)
-    while len(to_add) > 0:
-        [current1, current2] = to_add.pop()
-        # print(current1)
-        # print(current2)
-        if (current1,current2) in added:
-            continue
-        if current1 == current2:
-            continue
-        if current1 in network:
-            network[current1].add(current2)
-        else:
-            network[current2].add(current1)
-        added.add(tuple([current1,current2]))
-        added.add(tuple([current2,current1]))
-        for connection in network[current1]:
-            to_add.append(tuple((current2,connection)))
-        for connection in network[current2]:
-            to_add.append(tuple((current1,connection)))
-
-
-
-
-    to_add = deque()
-    if pos1 in network[pos2]:
-        return
-    network[pos1].add(pos2)
-    network[pos2].add(pos1)
-    to_add = list(network[pos2])
-    for connection in to_add:
-        if connection == pos1:
-            continue
-        add_to_network_recurse(network,pos1,connection)
-    to_add = list(network[pos1])
-    for connection in to_add:
-        if connection == pos2:
-            continue
-        add_to_network_recurse(network,pos2,connection)
+    if pos1 in network:
+        network[pos1].add(pos2)
+    else:
+        network[pos2].add(pos1)
 
 def main():
     import cProfile
