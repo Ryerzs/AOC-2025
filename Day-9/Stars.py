@@ -7,6 +7,7 @@ import itertools
 import functools
 from collections import Counter, deque, defaultdict
 
+
 def day_():
     if platform.system() == "Linux":
         year = int(os.getcwd().split('/')[-2][-4:]) 
@@ -74,6 +75,14 @@ def star1(data):
 
     return largest
 
+def sign(number):
+    if number < 0:
+        return -1
+    elif number > 0:
+        return 1
+    else:
+        return 0
+
 def star2(data):
     on_tiles = set()
     directions = {}
@@ -85,26 +94,24 @@ def star2(data):
             pos2 = data[0]
         else:
             pos2 = data[i+1]
-        min_x, max_x = min(pos1[0], pos2[0]), max(pos1[0], pos2[0])
-        min_y, max_y = min(pos1[1], pos2[1]), max(pos1[1], pos2[1])
-        width = max(width, max_x)
-        height = max(height, max_y)
-        prev = None
-        for x in range(min_x, max_x+1):
-            for y in range(min_y, max_y+1):
-                pos = (x,y)
-                on_tiles.add(pos)
-
-                if pos not in directions:
-                    directions[pos] = None #?
-                if prev == None:
-                    continue
-                direction = (pos[0]-prev[0], pos[1]-prev[1])
-                # Rotate direction 90degrees to the right
-                inside = (direction[1], -direction[0])
-                directions[pos] = inside
-                prev = pos
+        direction = (sign(pos2[0]-pos1[0]), sign(pos2[1]-pos1[1]))
+        inside = (direction[1], -direction[0])
+        current = tuple(pos1)
+        on_tiles.add(current)
+        while current != tuple(pos2):
+            current = (current[0]+direction[0], current[1]+direction[1])
+            on_tiles.add(current)
+            directions[current] = inside
+        on_tiles.add(current)
+        directions[current] = inside
     largest = 0
+
+    for tile in on_tiles:
+        if tile not in directions:
+            print("Not in:", tile)
+            continue
+        if directions[tile] == None:
+            print("None,", tile)
 
     print(len(on_tiles))
     on_tiles_x_sorted = sorted(on_tiles, key=lambda pos: -pos[0])
@@ -151,19 +158,20 @@ def is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
     if len(up_borders) == 0:
         return False
 
+    # print(corner, left_borders, up_borders)
     # found_border = False
     for border in left_borders:
-        if directions[border] == None:
+        if border not in directions:
             continue
-        if directions[border][0] == -1 or directions[border][1] == -1:
+        if directions[border][0] == -1 or directions[border][1] == 1:
             return False
         break
         
     # If there is an even amount of borders above me, point is outside
     for border in up_borders:
-        if directions[border] == None:
+        if border not in directions:
             continue
-        if directions[border][0] == -1 or directions[border][1] == -1:
+        if directions[border][0] == -1 or directions[border][1] == 1:
             return False
         break
     
