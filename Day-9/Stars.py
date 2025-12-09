@@ -5,7 +5,7 @@ from aocd import submit
 from aocd.models import Puzzle
 import itertools
 import functools
-from collections import Counter, deque
+from collections import Counter, deque, defaultdict
 
 def day_():
     if platform.system() == "Linux":
@@ -70,12 +70,16 @@ def star1(data):
     for i, pos1 in enumerate(data):
         for pos2 in data[i+1:]:
             area = abs((pos1[0]-pos2[0]+1)*(pos1[1]-pos2[1]+1))
-            largest = area if area > largest else largest
+            largest = max(largest, area)
 
     return largest
 
 def star2(data):
     on_tiles = set()
+    directions = {}
+    # Find border
+    width = 0
+    height = 0
     for i, pos1 in enumerate(data):
         if i == len(data)-1:
             pos2 = data[0]
@@ -83,33 +87,90 @@ def star2(data):
             pos2 = data[i+1]
         min_x, max_x = min(pos1[0], pos2[0]), max(pos1[0], pos2[0])
         min_y, max_y = min(pos1[1], pos2[1]), max(pos1[1], pos2[1])
+        width = max(width, max_x)
+        height = max(height, max_y)
+        prev = None
         for x in range(min_x, max_x+1):
             for y in range(min_y, max_y+1):
                 pos = (x,y)
                 on_tiles.add(pos)
-    print(len(on_tiles))
-    show_on_tiles(on_tiles)
+
+                if pos not in directions:
+                    directions[pos] = None #?
+                if prev == None:
+                    continue
+                direction = (pos[0]-prev[0], pos[1]-prev[1])
+                # Rotate direction 90degrees to the right
+                inside = (direction[1], -direction[0])
+                directions[pos] = inside
+                prev = pos
     largest = 0
+
+    print(len(on_tiles))
+    on_tiles_x_sorted = sorted(on_tiles, key=lambda pos: -pos[0])
+    on_tiles_y_sorted = sorted(on_tiles, key=lambda pos: -pos[1])
+    x_sorted = defaultdict(list)
+    y_sorted = defaultdict(list)
+    for tile in on_tiles_x_sorted:
+        x_sorted[tile[1]].append(tile)
+    for tile in on_tiles_y_sorted:
+        y_sorted[tile[0]].append(tile)
+    # show_on_tiles(on_tiles)
     for i, pos1 in enumerate(data):
-        for pos2 in data[i+1:]:
+        for j, pos2 in enumerate(data[i+1:]):
+            print(i,j, len(data))
             min_x, max_x = min(pos1[0], pos2[0]), max(pos1[0], pos2[0])
             min_y, max_y = min(pos1[1], pos2[1]), max(pos1[1], pos2[1])
             is_valid = True
-            for y in range(min_y, max_y+1):
-                if (min_x, y) not in on_tiles or (max_x, y) not in on_tiles:
+            # Valid if all 4 corners are inside the shape. How do I know if a point is inside?
+            corners = [(min_x, min_y),
+                       (min_x, max_y),
+                       (max_x, min_y),
+                       (max_x, max_y)]
+            for corner in corners:
+                if not is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
                     is_valid = False
                     break
-            if is_valid == False:
-                continue
-            for x in range(min_x, max_x+1):
-                if (x, min_y) not in on_tiles or (x, max_y) not in on_tiles:
-                    is_valid = False
-                    break
+
             if is_valid == False:
                 continue
             area = abs((pos1[0]-pos2[0]+1)*(pos1[1]-pos2[1]+1))
-            largest = area if area > largest else largest
+            largest = max(largest, area)
     return largest
+
+def is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
+    if corner in on_tiles:
+        return True
+    
+    # If there is an even amount of borders to my left, point is outside
+    left_borders = [tile for tile in x_sorted[corner[1]] if tile[0] < corner[0]]
+    up_borders   = [tile for tile in y_sorted[corner[0]] if tile[1] < corner[1]]
+
+    if len(left_borders) == 0:
+        return False
+    if len(up_borders) == 0:
+        return False
+
+    # found_border = False
+    for border in left_borders:
+        if directions[border] == None:
+            continue
+        if directions[border][0] == -1 or directions[border][1] == -1:
+            return False
+        break
+        
+    # If there is an even amount of borders above me, point is outside
+    for border in up_borders:
+        if directions[border] == None:
+            continue
+        if directions[border][0] == -1 or directions[border][1] == -1:
+            return False
+        break
+    
+    return True
+
+
+    
 
 def show_on_tiles(on_tiles):
     grid = []
