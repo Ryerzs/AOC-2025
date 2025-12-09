@@ -96,6 +96,7 @@ def star2(data):
             pos2 = data[i+1]
         direction = (sign(pos2[0]-pos1[0]), sign(pos2[1]-pos1[1]))
         inside = (direction[1], -direction[0])
+        # inside = (-direction[1], direction[0])
         current = tuple(pos1)
         on_tiles.add(current)
         while current != tuple(pos2):
@@ -163,19 +164,22 @@ def is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
     for border in left_borders:
         if border not in directions:
             continue
-        if directions[border][0] == -1 or directions[border][1] == 1:
-            return False
+        # if directions[border][0] == -1 or directions[border][1] == 1:
+        if directions[border][0] == 1:
+            return True
         break
         
     # If there is an even amount of borders above me, point is outside
     for border in up_borders:
         if border not in directions:
             continue
-        if directions[border][0] == -1 or directions[border][1] == 1:
-            return False
+        # if directions[border][0] == -1 or directions[border][1] == 1:
+        # if directions[border][0] == 1 or directions[border][1] == -1:
+        if directions[border][0] == 1 or directions[border][1] == -1:
+            return True
         break
     
-    return True
+    return False
 
 
     
