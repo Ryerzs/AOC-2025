@@ -98,35 +98,46 @@ def rotate_right(pos):
 def rotate_left(pos):
     return (-pos[1], pos[0])
 
+def add_line(current, pos2, prevprev, direction, tiles):
+    if prevprev != direction and prevprev is not None:
+        tiles.add(current)
+    while current != pos2:
+        current = add_pos(current, direction)
+        tiles.add(current)
+    tiles.add(current)
+
 def star2(data):
     on_tiles = set()
+    walls = set()
+    roofs = set()
     directions = {}
-    for i, pos1 in enumerate(data):
-        if i == len(data)-1:
-            pos2 = tuple(data[0])
-        else:
-            pos2 = tuple(data[i+1])
-        direction = normalize(sub_pos(pos2, pos1))
-        inside = rotate_right(direction)
+    prev = None
+    prevprev = None
+    length = len(data)
+    for i in range(length+1):
+        pos1 = tuple(data[i%length])
+        pos2 = tuple(data[(i+1)%length])
 
-        current = tuple(pos1)
-        on_tiles.add(current)
-        while current != pos2:
-            current = add_pos(current, direction)
-            on_tiles.add(current)
-            directions[current] = inside
-        on_tiles.add(current)
-        directions[current] = inside
+        direction = normalize(sub_pos(pos2, pos1))
+
+        current = pos1
+        if direction == (1,0) or direction == (-1,0):
+            add_line(current, pos2, prevprev, direction, walls)
+        if direction == (0,1) or direction == (0,-1):
+            add_line(current, pos2, prevprev, direction, roofs)
+
+        prevprev = prev
+        prev = direction
 
     print(len(on_tiles))
-    on_tiles_x_sorted = sorted(on_tiles, key=lambda pos: -pos[0])
-    on_tiles_y_sorted = sorted(on_tiles, key=lambda pos: -pos[1])
-    x_sorted = defaultdict(list)# For a given y value, display all points at the same y in decreasing order
-    y_sorted = defaultdict(list)# For a given x value, display all points at the same x in decreasing order
-    for tile in on_tiles_x_sorted:
-        x_sorted[tile[1]].append(tile)
-    for tile in on_tiles_y_sorted:
-        y_sorted[tile[0]].append(tile)
+    walls = sorted(walls, key=lambda pos: -pos[0])
+    roofs = sorted(roofs, key=lambda pos: -pos[1])
+    walls_sorted = defaultdict(list)# For a given y value, display all points at the same y in decreasing order
+    roofs_sorted = defaultdict(list)# For a given x value, display all points at the same x in decreasing order
+    for tile in walls:
+        walls_sorted[tile[1]].append(tile)
+    for tile in roofs:
+        roofs_sorted[tile[0]].append(tile)
     # show_on_tiles(on_tiles)
 
     largest = 0
@@ -140,7 +151,7 @@ def star2(data):
                        (min_x, max_y),
                        (max_x, min_y),
                        (max_x, max_y)]
-            valids = [1 for corner in corners if is_inside(corner, on_tiles, x_sorted, y_sorted, directions) == False]
+            valids = [1 for corner in corners if is_inside(corner, on_tiles, walls_sorted, roofs_sorted, directions) == False]
 
             if sum(valids) > 0:
                 continue
