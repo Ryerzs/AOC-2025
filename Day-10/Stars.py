@@ -94,28 +94,47 @@ def star1(data):
     for machine in data:
         goal = machine[0]
         total += search_for_goal(goal, machine[1], operation=perform_instruction)
-        print(total)
+        # print(total)
     return total
 
-def search_for_goal(goal:list[int], instructions:list[int], operation):
+def zero(goal, node):
+    return 0
+
+def search_for_goal(goal:list[int], instructions:list[int], operation, heuristic=zero):
     goal = tuple(goal)
     to_search = []
-    start = (0, tuple([0]*len(goal)))
+    start_node = tuple([0]*len(goal))
+
+    start = (heuristic(goal, start_node), 0, start_node)
     heappush(to_search, start)
     searched = set()
+    iterations = 0
     while len(to_search) > 0:
-        flips, current = heappop(to_search)
+        _, flips, current = heappop(to_search)
 
         if current in searched:
             continue
+        iterations += 1
         searched.add(current)
+
+        if iterations % 10000 == 0:
+            print(current, flips, _, heuristic(goal, current))
         
         if current == goal:
             return flips
 
         for instruction in instructions:
             next_state = operation(current, instruction)
-            heappush(to_search, (flips+1, next_state))
+            heappush(to_search, (flips+1+heuristic(goal, next_state), flips+1, next_state))
+
+def difference(goal, node, combinations):
+    total = 0
+    for pos1,pos2 in zip(goal, node):
+        dif = pos1-pos2
+        if dif < 0:
+            return 10000000000000000000000000000000000000
+        total += dif
+    return total
 
 def perform_instruction(state:tuple, instruction:list[int]):
     next_state = list(state)
@@ -128,9 +147,41 @@ def star2(data):
     total = 0
     for machine in data:
         goal = machine[2]
-        total += search_for_goal(goal, machine[1], operation = add)
+        print(goal)
+        total += search_for_goal2(goal, machine[1], operation = add, heuristic=difference)
+        # total += search_for_goal(goal, machine[1], operation = add, heuristic=zero)
         print(total)
     return total
+
+def search_for_goal2(goal:list[int], instructions:list[int], operation, heuristic=zero):
+    goal = tuple(goal)
+    to_search = []
+    start_node = tuple([0]*len(goal))
+    combinations = tuple([0]*len(instructions))
+
+    start = (heuristic(goal, start_node), 0, start_node, combinations)
+    heappush(to_search, start)
+    searched = set()
+    iterations = 0
+    while len(to_search) > 0:
+        _, flips, current, combinations = heappop(to_search)
+
+        if current in searched:
+            continue
+        iterations += 1
+        searched.add(current)
+
+        if iterations % 10000 == 0:
+            print(current, flips, _, heuristic(goal, current))
+        
+        if current == goal:
+            return flips
+
+        for i, instruction in enumerate(instructions):
+            next_combinations = list(combinations)
+            next_combinations[i] += 1
+            next_state = operation(current, instruction)
+            heappush(to_search, (flips+1+heuristic(goal, next_state, next_combinations), flips+1, next_state, tuple(next_combinations)))
 
 def add(state:tuple, instruction: list[int]):
     next_state = list(state)
