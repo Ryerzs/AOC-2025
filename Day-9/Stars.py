@@ -83,98 +83,96 @@ def sign(number):
     else:
         return 0
 
+def add_pos(pos1, pos2):
+    return (pos1[0]+pos2[0], pos1[1]+pos2[1])
+
+def sub_pos(pos1, pos2):
+    return (pos1[0]-pos2[0], pos1[1]-pos2[1])
+
+def normalize(pos):
+    return (sign(pos[0]), sign(pos[1]))
+
+def rotate_right(pos):
+    return (pos[1], -pos[0])
+
+def rotate_left(pos):
+    return (-pos[1], pos[0])
+
 def star2(data):
     on_tiles = set()
     directions = {}
-    # Find border
-    width = 0
-    height = 0
     for i, pos1 in enumerate(data):
         if i == len(data)-1:
-            pos2 = data[0]
+            pos2 = tuple(data[0])
         else:
-            pos2 = data[i+1]
-        direction = (sign(pos2[0]-pos1[0]), sign(pos2[1]-pos1[1]))
-        inside = (direction[1], -direction[0])
-        # inside = (-direction[1], direction[0])
+            pos2 = tuple(data[i+1])
+        direction = normalize(sub_pos(pos2, pos1))
+        inside = rotate_right(direction)
+
         current = tuple(pos1)
         on_tiles.add(current)
-        while current != tuple(pos2):
-            current = (current[0]+direction[0], current[1]+direction[1])
+        while current != pos2:
+            current = add_pos(current, direction)
             on_tiles.add(current)
             directions[current] = inside
         on_tiles.add(current)
         directions[current] = inside
-    largest = 0
-
-    for tile in on_tiles:
-        if tile not in directions:
-            print("Not in:", tile)
-            continue
-        if directions[tile] == None:
-            print("None,", tile)
 
     print(len(on_tiles))
     on_tiles_x_sorted = sorted(on_tiles, key=lambda pos: -pos[0])
     on_tiles_y_sorted = sorted(on_tiles, key=lambda pos: -pos[1])
-    x_sorted = defaultdict(list)
-    y_sorted = defaultdict(list)
+    x_sorted = defaultdict(list)# For a given y value, display all points at the same y in decreasing order
+    y_sorted = defaultdict(list)# For a given x value, display all points at the same x in decreasing order
     for tile in on_tiles_x_sorted:
         x_sorted[tile[1]].append(tile)
     for tile in on_tiles_y_sorted:
         y_sorted[tile[0]].append(tile)
     # show_on_tiles(on_tiles)
+
+    largest = 0
     for i, pos1 in enumerate(data):
         for j, pos2 in enumerate(data[i+1:]):
             print(i,j, len(data))
             min_x, max_x = min(pos1[0], pos2[0]), max(pos1[0], pos2[0])
             min_y, max_y = min(pos1[1], pos2[1]), max(pos1[1], pos2[1])
-            is_valid = True
             # Valid if all 4 corners are inside the shape. How do I know if a point is inside?
             corners = [(min_x, min_y),
                        (min_x, max_y),
                        (max_x, min_y),
                        (max_x, max_y)]
-            for corner in corners:
-                if not is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
-                    is_valid = False
-                    break
+            valids = [1 for corner in corners if is_inside(corner, on_tiles, x_sorted, y_sorted, directions) == False]
 
-            if is_valid == False:
+            if sum(valids) > 0:
                 continue
+
             area = abs((pos1[0]-pos2[0]+1)*(pos1[1]-pos2[1]+1))
             largest = max(largest, area)
     return largest
 
 def is_inside(corner, on_tiles, x_sorted, y_sorted, directions):
+
+    # If corner already on, then point is inside
     if corner in on_tiles:
         return True
     
-    # If there is an even amount of borders to my left, point is outside
     left_borders = [tile for tile in x_sorted[corner[1]] if tile[0] < corner[0]]
     up_borders   = [tile for tile in y_sorted[corner[0]] if tile[1] < corner[1]]
 
-    if len(left_borders) == 0:
-        return False
-    if len(up_borders) == 0:
+    if len(left_borders) == 0 or len(up_borders) == 0:
         return False
 
-    # print(corner, left_borders, up_borders)
-    # found_border = False
+    # If first border to the left points inwards, then point is inside
     for border in left_borders:
         if border not in directions:
             continue
-        # if directions[border][0] == -1 or directions[border][1] == 1:
         if directions[border][0] == 1:
             return True
         break
         
-    # If there is an even amount of borders above me, point is outside
+    # If first border to upwards points inwards, then point is inside
     for border in up_borders:
         if border not in directions:
             continue
-        # if directions[border][0] == -1 or directions[border][1] == 1:
-        # if directions[border][0] == 1 or directions[border][1] == -1:
         if directions[border][0] == 1 or directions[border][1] == -1:
             return True
         break
