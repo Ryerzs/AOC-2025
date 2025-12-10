@@ -127,7 +127,7 @@ def search_for_goal(goal:list[int], instructions:list[int], operation, heuristic
             next_state = operation(current, instruction)
             heappush(to_search, (flips+1+heuristic(goal, next_state), flips+1, next_state))
 
-def difference(goal, node, combinations):
+def difference(goal, node):
     total = 0
     for pos1,pos2 in zip(goal, node):
         dif = pos1-pos2
@@ -153,40 +153,69 @@ def star2(data):
         print(total)
     return total
 
+def add_pos(pos1, pos2):
+    return tuple(p+q for p,q in zip(pos1,pos2))
+
+def sub_pos(pos1, pos2):
+    return tuple(p-q for p,q in zip(pos1,pos2))
+
 def search_for_goal2(goal:list[int], instructions:list[int], operation, heuristic=zero):
     goal = tuple(goal)
-    to_search = []
+    to_search_lower = []
+    to_search_upper = []
     start_node = tuple([0]*len(goal))
-    combinations = tuple([0]*len(instructions))
+    middle = tuple([p//2 for p in goal])
 
-    start = (heuristic(goal, start_node), 0, start_node, combinations)
-    heappush(to_search, start)
-    searched = set()
+    start = (heuristic(middle, start_node), 0, start_node)
+    end   = (heuristic(goal, middle), 0, goal)
+    heappush(to_search_lower, start)
+    heappush(to_search_upper, end)
+    searched_lower = {}
+    searched_upper = {}
     iterations = 0
-    while len(to_search) > 0:
-        _, flips, current, combinations = heappop(to_search)
+    while True:
+        _, flips_lower, current_lower = heappop(to_search_lower)
+        _, flips_upper, current_upper = heappop(to_search_upper)
 
-        if current in searched:
+        if current_lower in searched_upper:
+            return flips_lower + searched_upper[current_lower]
+        if current_upper in searched_lower:
+            return flips_upper + searched_lower[current_upper]
+
+        if current_lower in searched_lower:
             continue
+        if current_upper in searched_upper:
+            continue
+        searched_lower[current_lower] = flips_lower
+        searched_upper[current_upper] = flips_upper
         iterations += 1
-        searched.add(current)
 
         if iterations % 10000 == 0:
-            print(current, flips, _, heuristic(goal, current))
-        
-        if current == goal:
-            return flips
+            print(current_lower, current_upper, flips_lower, flips_upper)
 
-        for i, instruction in enumerate(instructions):
-            next_combinations = list(combinations)
-            next_combinations[i] += 1
-            next_state = operation(current, instruction)
-            heappush(to_search, (flips+1+heuristic(goal, next_state, next_combinations), flips+1, next_state, tuple(next_combinations)))
+        for instruction in instructions:
+            next_lower = add(current_lower, instruction)
+            if sum([1 for p,q in zip(next_lower,goal) if p > q]) == 0:
+                cost_to_here = flips_lower + 1
+                estimate_left = heuristic(middle, next_lower)
+                heappush(to_search_lower, (cost_to_here+estimate_left, cost_to_here, next_lower))
+
+            next_upper = sub(current_upper, instruction)
+            if sum([1 for p in next_upper if p < 0]) == 0:
+                cost_to_here = flips_upper + 1
+                estimate_left = heuristic(next_upper, middle)
+                heappush(to_search_upper, (cost_to_here+estimate_left, cost_to_here, next_upper))
 
 def add(state:tuple, instruction: list[int]):
     next_state = list(state)
     for bit in instruction:
         next_state[bit] += 1
+    return tuple(next_state)
+
+def sub(state:tuple, instruction: list[int]):
+    next_state = list(state)
+    for bit in instruction:
+        next_state[bit] -= 1
     return tuple(next_state)
 
 
