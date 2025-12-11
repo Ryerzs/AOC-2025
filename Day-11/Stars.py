@@ -67,31 +67,32 @@ def format_data(raw):
     return came_from
     
 def star1(came_from:dict[str:list[str]]):
-    return paths_to('out', 'you', came_from)
+    return paths_to('you', 'out', came_from)
 
-def paths_to(goal, start, came_from) -> int:
+def paths_to(start, goal, came_from) -> int:
     cache = {}
-    return paths_to_cached(goal, start, came_from, cache)
+    return paths_to_cached(start, goal, came_from, cache)
 
-def paths_to_cached(goal, start, came_from, cache:dict[str:int]) -> int:
-    count = 0
+def paths_to_cached(start, goal, came_from, cache:dict[str:int]) -> int:
+    # Base case
     if goal == start:
         return 1
-    for current in came_from[goal]:
-        if current in cache:
-            count += cache[current]
+
+    count = 0
+    for previous in came_from[goal]:
+        if previous in cache:
+            count += cache[previous]
             continue
-        count += paths_to_cached(current, start, came_from, cache)
+        count += paths_to_cached(start, previous, came_from, cache)
     
     cache[goal] = count
     return count
 
-
 def star2(came_from:dict[str:list[str]]):
     total = 1
-    total *= paths_to('fft', 'svr', came_from)
-    total *= paths_to('dac', 'fft', came_from)
-    total *= paths_to('out', 'dac', came_from)
+    to_search = [('svr', 'fft'), ('fft','dac'), ('dac', 'out')]
+    for search in to_search:
+        total *= paths_to(search[0], search[1], came_from)
     return total
 
 def main():
