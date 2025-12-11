@@ -59,15 +59,14 @@ def day_():
         print(f'Star 2 answer: {ans2}')
 
 def format_data(raw):
-    data = defaultdict(list)
-
+    came_from = defaultdict(list)
     for row in raw.splitlines():
         start, outgoing = row.split(': ')
         for end in outgoing.split(' '):
-            data[end].append(start)
-    return data
+            came_from[end].append(start)
+    return came_from
     
-def star1(came_from):
+def star1(came_from:dict[str:list[str]]):
     total = 0
     goal = 'out'
     start = 'you'
@@ -75,7 +74,7 @@ def star1(came_from):
     total = paths_to(goal, start, came_from, cache)
     return total
 
-def paths_to(goal, start, came_from, cache) -> int:
+def paths_to(goal, start, came_from, cache:dict[str:int]) -> int:
     count = 0
     if goal == start:
         return 1
@@ -89,7 +88,7 @@ def paths_to(goal, start, came_from, cache) -> int:
     return count
 
 
-def star2(came_from):
+def star2(came_from:dict[str:list[str]]):
     total = 1
     cache = {}
     total *= paths_to('fft', 'svr', came_from, cache)
